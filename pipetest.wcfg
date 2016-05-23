@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="C:/Users/huangzf/Desktop/Labs/PipelineCPU/test_top_isim_beh.wdb" id="1" type="auto">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="test_top" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <WVObjectSize size="13" />
+   <wvobject fp_name="/test_top/LED" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">LED</obj_property>
+      <obj_property name="ObjectShortName">LED</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_top/LCDE" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">LCDE</obj_property>
+      <obj_property name="ObjectShortName">LCDE</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_top/LCDRS" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">LCDRS</obj_property>
+      <obj_property name="ObjectShortName">LCDRS</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_top/LCDRW" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">LCDRW</obj_property>
+      <obj_property name="ObjectShortName">LCDRW</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_top/LCDDAT" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">LCDDAT[3:0]</obj_property>
+      <obj_property name="ObjectShortName">LCDDAT[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_top/rpc" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">rpc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">rpc[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_top/rcnt" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">rcnt[7:0]</obj_property>
+      <obj_property name="ObjectShortName">rcnt[7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_top/rinst" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">rinst[31:0]</obj_property>
+      <obj_property name="ObjectShortName">rinst[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_top/rreg" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">rreg[31:0]</obj_property>
+      <obj_property name="ObjectShortName">rreg[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_top/CCLK" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">CCLK</obj_property>
+      <obj_property name="ObjectShortName">CCLK</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_top/BTN3" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">BTN3</obj_property>
+      <obj_property name="ObjectShortName">BTN3</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_top/BTN2" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">BTN2</obj_property>
+      <obj_property name="ObjectShortName">BTN2</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_top/SW" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">SW[3:0]</obj_property>
+      <obj_property name="ObjectShortName">SW[3:0]</obj_property>
+   </wvobject>
+</wave_config>
