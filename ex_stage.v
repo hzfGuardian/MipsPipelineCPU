@@ -48,9 +48,11 @@ module ex_stage (clk,  id_imm, id_inA, id_inB, id_wreg, id_m2reg, id_wmem, id_al
 	wire [4:0]e_rt;
 	wire [4:0]e_rd;
 	
-	wire [31:0] b_in_0;//add for forwarding
-
-	assign a_in = (id_FWA == 2'b00) ? edata_a : ((id_FWA == 2'b01) ? mem_aluR : wb_dest);///*eshift ? sa : */edata_a;
+	wire [31:0] a_in_0, b_in_0;//add for forwarding
+	
+	assign a_in_0 = (id_FWA == 2'b00) ? edata_a : ((id_FWA == 2'b01) ? mem_aluR : wb_dest);
+	
+	assign a_in = eshift ? sa : a_in_0;
 	
 	assign b_in_0 = (id_FWB == 2'b00) ? edata_b : ((id_FWB == 2'b01) ? mem_aluR : wb_dest);//add for forwarding
 	
