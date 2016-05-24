@@ -1,13 +1,16 @@
 
 `include "macro.vh"
 
-module ctrl_unit(clk, rst, if_instr, instr, 
-	cu_branch, cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_sext,cu_regrt, cu_wpcir, cu_fwda, cu_fwdb);
+module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
+	cu_branch, cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_sext,cu_regrt, cu_wpcir, cu_fwda, cu_fwdb,
+	cu_jump);
 	
 	input clk;
 	input rst;
 	input [31:0] instr;
 	input [31:0] if_instr;
+	
+	input id_rsrtequ;
 	
 	output cu_branch;
 	output cu_wreg;
@@ -22,6 +25,9 @@ module ctrl_unit(clk, rst, if_instr, instr,
 	output cu_wpcir;//add for stall
 	//these for forwarding
 	output wire [1:0] cu_fwda, cu_fwdb;
+	
+	//add for control logic
+	output cu_jump;
 	
 	wire [5:0] func;
 	wire [5:0] opcode;
@@ -54,7 +60,7 @@ module ctrl_unit(clk, rst, if_instr, instr,
 	//these for stall
 	wire AfromEx, BfromEx, AfromMem, BfromMem, AfromExLW, BfromExLW, AfromMemLW, BfromMemLW;
 	
-	
+	wire control_stall, load_stall;
 	
 	assign opcode[5:0] =instr[31:26];////////////fetch new instr
 	assign rs[4:0] = instr[25:21];
@@ -79,7 +85,7 @@ module ctrl_unit(clk, rst, if_instr, instr,
 	assign mem_op[5:0] = mem_instr[31:26];
 	assign wb_op[5:0] = wb_instr[31:26];
 	
-	assign cu_branch = (opcode == `OP_BEQ); //if instr type == BEQ then 1 else 0
+	assign cu_branch = ((opcode == `OP_BEQ) & id_rsrtequ) | ((opcode == `OP_BNE) & (~id_rsrtequ)); //modified for branch control logic
 	assign cu_regrt = ~(opcode == `OP_ALUOp); //if instr type = R type then 0 else 1;
 	assign cu_sext = (opcode == `OP_BEQ)|(opcode == `OP_BNE)|(opcode == `OP_LW)|(opcode == `OP_SW)|(opcode==`OP_ADDI);//when need to sign extend?
 	
@@ -101,26 +107,22 @@ module ctrl_unit(clk, rst, if_instr, instr,
 	//assign AfromMemLW = (if_rs == ex_rt) & (if_rs != 0) & (ex_op == `OP_LW);
 	//assign BfromMemLW = (if_rt == ex_rt) & (if_rt != 0) & (ex_op == `OP_LW);
 	
-	assign cu_wpcir = AfromExLW | BfromExLW;
+	assign control_stall = (ex_op == `OP_BEQ) | (ex_op == `OP_BNE) | (mem_op == `OP_BEQ) | (mem_op == `OP_BNE)
+			| (ex_op == `OP_JMP) | (mem_op == `OP_JMP);
+	assign load_stall = ((ex_rd == id_rs) & (ex_rs != 0) & (ex_op == `OP_LW))
+								| ((ex_rd == id_rt) & (ex_rt != 0) & (ex_op == `OP_LW));
+	
+	//Control stall: ex_op / mem_op is branch or jmp.      (Flush)
+	//Load stall:   (ex_op=lw) & ((ex_rd=id_rs) & exist_id_rs) 
+   //                 or ((ex_rd= id_rt) & exist_id_rt )
+
+	
+	assign cu_wpcir = control_stall | load_stall;//modified
 	
 	assign cu_fwda[1:0] = (AfromEx == 1) ? 2'b01 : ((AfromMem == 1) ? 2'b10 : 2'b00);
 	assign cu_fwdb[1:0] = (BfromEx == 1) ? 2'b01 : ((BfromMem == 1) ? 2'b10 : 2'b00);
 	
-	/*
-	//stall
-	assign AfromEx = ((ex_rs == mem_rd) && (ex_rs != 0) && (mem_op ==`OP_ALUOp)); //if instr.rs=id inst.rd and id instr = ALUOp
-	assign BfromEx = ((ex_rt == mem_rd) && (ex_rt != 0) && (mem_op ==`OP_ALUOp));
-	assign AfromMem = ((ex_rs == wb_rd) && (ex_rs != 0) && (wb_op == `OP_ALUOp))||
-							((ex_rs == wb_rt) && (ex_rs != 0) && (wb_op == `OP_LW));
-	assign BfromMem = ((ex_rt == wb_rd) && (ex_rt != 0) && (wb_op == `OP_ALUOp))||
-							((ex_rt == wb_rt) && (ex_rt != 0) && (wb_op == `OP_LW));
-	assign AfromExLW = ((if_rs == rt) && (if_rs != 0) && (opcode ==`OP_LW)); 
-	assign BfromExLW = ((if_rt == rt) && (if_rt != 0) && (opcode ==`OP_LW)); 
-	//assign AfromMemLW = ((if_rs == ex_rt) && (if_rs != 0) && (ex_op ==`OP_LW));
-	//assign BfromMemLW = ((if_rt == ex_rt) && (if_rt != 0) && (ex_op ==`OP_LW));
-	assign cu_fwda[1:0]=(AfromEx == 1) ? 2'b01 : ((AfromMem == 1) ? 2'b10 : 2'b00);
-	assign cu_fwdb[1:0]=(BfromEx == 1) ? 2'b01 : ((BfromMem == 1) ? 2'b10 : 2'b00);
-	*/
+	assign cu_jump = (opcode == `OP_JMP);
 	
 	always @ (posedge clk or posedge rst)
 		if(rst == 1)
