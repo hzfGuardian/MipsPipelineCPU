@@ -2,8 +2,10 @@
 
 `include "macro.vh"
 module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg, 
+	ex_aluR, mem_aluR, mem_mdata,//add for branch
 	cu_wpcir,//add for stall
-	cu_fwda, cu_fwdb,//forwarding
+	//cu_fwda, cu_fwdb,//forwarding
+	ID_new_pc, //add for control
 	cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_branch, id_pc4, id_inA, id_inB, id_imm, cu_regrt, rt, rd, 
 	IF_ins_type, IF_ins_number, ID_ins_type, ID_ins_number, which_reg, reg_content);
 	
@@ -42,7 +44,13 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	
 	
 	output cu_wpcir;//add for stall
-	output wire [1:0] cu_fwda, cu_fwdb;//add for forwarding
+	
+	wire [1:0] cu_fwda, cu_fwdb;//add for forwarding---------------------------------
+	
+	wire cu_jump;//add for branch
+	
+	input [31:0] ex_aluR, mem_aluR, mem_mdata;//add for branch
+	output [31:0] ID_new_pc;
 	
 	wire cu_sext;
 	wire cu_regrt;
@@ -62,6 +70,18 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	
 	reg[3:0] ID_ins_type;
 	reg[3:0] ID_ins_number;
+	
+	
+	//add for branch
+	wire jmp_in_0, jmp_in_1;
+	
+	wire id_rsrtequ;
+	
+	assign jmp_in_0 = pc4 + {(imm[15] ? {14'b1, imm} : {14'b0, imm}), 2'b00};
+	assign jmp_in_1 = {pc4[31:28], reg_inst[25:0], 2'b00};
+	assign ID_new_pc = cu_jump ? jmp_in_1 : jmp_in_0;
+	
+	assign id_rsrtequ = (id_inA == id_inB) ? 1 : 0;
 	
 	assign imm = reg_inst[15:0];
 	assign rt= reg_inst[20:16];
@@ -100,12 +120,14 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	regfile x_regfile(clk, rst, reg_inst[25:21], reg_inst[20:16], wb_destR, wb_dest, wb_wreg, rdata_A, rdata_B,
 		which_reg, reg_content);
 		
-	ctrl_unit x_ctrl_unit(clk, rst, if_inst[31:0], reg_inst[31:0],
-		cu_branch, cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_sext,cu_regrt, cu_wpcir, cu_fwda, cu_fwdb);
+	ctrl_unit x_ctrl_unit(clk, rst, if_inst[31:0], reg_inst[31:0], id_rsrtequ, 
+		cu_branch, cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_sext,cu_regrt, cu_wpcir, cu_fwda, cu_fwdb, cu_jump);
 	
-	assign id_inA = rdata_A;
-	assign id_inB = rdata_B; //
+	//assign id_inA = rdata_A;
+	//assign id_inB = rdata_B; //
 	
+	mux4_1 mua(rdata_A, ex_aluR, mem_aluR, mem_mdata, cu_fwda, id_inA);
+	mux4_1 mub(rdata_B, ex_aluR, mem_aluR, mem_mdata, cu_fwdb, id_inB);
 	
 endmodule
 

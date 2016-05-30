@@ -109,8 +109,8 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	
 	assign control_stall = (ex_op == `OP_BEQ) | (ex_op == `OP_BNE) | (mem_op == `OP_BEQ) | (mem_op == `OP_BNE)
 			| (ex_op == `OP_JMP) | (mem_op == `OP_JMP);
-	assign load_stall = ((ex_rd == id_rs) & (ex_rs != 0) & (ex_op == `OP_LW))
-								| ((ex_rd == id_rt) & (ex_rt != 0) & (ex_op == `OP_LW));
+	assign load_stall = ((ex_rt == rs) & (rs != 0) & (ex_op == `OP_LW))
+								| ((ex_rt == rt) & (rt != 0) & (ex_op == `OP_LW));
 	
 	//Control stall: ex_op / mem_op is branch or jmp.      (Flush)
 	//Load stall:   (ex_op=lw) & ((ex_rd=id_rs) & exist_id_rs) 
@@ -119,8 +119,11 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	
 	assign cu_wpcir = control_stall | load_stall;//modified
 	
-	assign cu_fwda[1:0] = (AfromEx == 1) ? 2'b01 : ((AfromMem == 1) ? 2'b10 : 2'b00);
-	assign cu_fwdb[1:0] = (BfromEx == 1) ? 2'b01 : ((BfromMem == 1) ? 2'b10 : 2'b00);
+	assign cu_fwda[1:0] = ((ex_op == `OP_ALUOp) && ((ex_rd == rs) & (rs != 0))) ? 2'b01 : 
+		( (((mem_op == `OP_ALUOp) & (mem_rd == rs) & (rs != 0)) | ((mem_op == `OP_LW) & (mem_rt == rs) & (rs != 0)) ) ? 2'b10 : 2'b00);
+	
+	assign cu_fwdb[1:0] = ((ex_op == `OP_ALUOp) && ((ex_rd == rt) & (rt != 0))) ? 2'b01 : 
+		( (((mem_op == `OP_ALUOp) & (mem_rd == rt) & (rt != 0)) | ((mem_op == `OP_LW) & (mem_rt == rt) & (rt != 0)) ) ? 2'b10 : 2'b00);
 	
 	assign cu_jump = (opcode == `OP_JMP);
 	

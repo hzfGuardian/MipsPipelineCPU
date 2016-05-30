@@ -30,7 +30,7 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 	wire[31:0] ex_aluR;
 	wire[31:0] ex_inB;
 	wire[4:0] ex_destR;
-	wire ex_branch,ex_zero;
+	//wire ex_branch,ex_zero;
 	wire[31:0]ex_pc;
 	
 	wire mem_wreg;
@@ -38,7 +38,7 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 	wire[31:0] mem_mdata;
 	wire[31:0] mem_aluR;
 	wire[4:0] mem_destR;
-	wire mem_branch;
+	//wire mem_branch;
 	wire[31:0] mem_pc;
 	
 	wire wb_wreg;
@@ -76,6 +76,8 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 	wire id_wpcir; //add for stall
 	
 	wire [1:0] id_FWA, id_FWB;//add for forwarding
+	
+	wire [31:0] id_jpc;
 	
 	assign LCDDAT[3]=lcdd[3];
 	assign LCDDAT[2]=lcdd[2];
@@ -128,20 +130,20 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 
 			//second line
 			//strdata[127:120] = "f";
-			strdata[119:112] <= ByteToChar(IF_ins_number);
-			strdata[111:104] <= ByteToChar(IF_ins_type);
+			strdata[119:112] <= ByteToChar(ex_aluR[7:4]);
+			strdata[111:104] <= ByteToChar(ex_aluR[3:0]);
 			//strdata[103:96] = "d";
-			strdata[95:88] <= ByteToChar(ID_ins_number);
-			strdata[87:80] <= ByteToChar(ID_ins_type);
+			strdata[95:88] <= ByteToChar(mem_aluR[7:4]);
+			strdata[87:80] <= ByteToChar(mem_aluR[3:0]);
 			//strdata[79:72] = "e";
-			strdata[71:64] <= ByteToChar(EX_ins_number);
-			strdata[63:56] <= ByteToChar(EX_ins_type);
+			strdata[71:64] <= ByteToChar(wb_dest[7:4]);
+			strdata[63:56] <= ByteToChar(wb_dest[3:0]);
 			//strdata[55:48] = "m";
-			strdata[47:40] <= ByteToChar(MEM_ins_number);
-			strdata[39:32] <= ByteToChar(MEM_ins_type);
+			strdata[47:40] <= ByteToChar(id_inA[7:4]);
+			strdata[39:32] <= ByteToChar(id_inA[3:0]);
 			//strdata[31:24] = "w";
-			strdata[23:16] <= ByteToChar(WB_ins_number);//
-			strdata[15:8] <= ByteToChar(WB_ins_type);
+			strdata[23:16] <= ByteToChar(id_inB[7:4]);//
+			strdata[15:8] <= ByteToChar(id_inB[3:0]);
 		end
 		if((btn_out3 == 1'b1) || (btn_out2 == 1'b1)||(SW_old != SW)) begin
 			//first line after CLK and space
@@ -167,23 +169,24 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 
 	assign pc [31:0] = if_npc[31:0];
 
-	if_stage x_if_stage(btn_out3, btn_out2, pc, mem_pc, mem_branch, id_wpcir, 
+	if_stage x_if_stage(btn_out3, btn_out2, pc, id_jpc, id_branch, id_wpcir, 
 	  if_npc, if_pc4, if_inst, IF_ins_type, IF_ins_number,ID_ins_type,ID_ins_number);
 
 	id_stage x_id_stage(btn_out3, btn_out2, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg, 
+		ex_aluR, mem_aluR, mem_mdata, //add for branch
 		id_wpcir, //add for stall
-		id_FWA, id_FWB, //add for forwarding
+		//id_FWA, id_FWB, //add for forwarding
+		id_jpc, //add for branch
 		id_wreg, id_m2reg, id_wmem, id_aluc, id_shift, id_aluimm, id_branch, id_pc4, id_inA, id_inB, id_imm, id_regrt,id_rt,id_rd, 
 		ID_ins_type, ID_ins_number, EX_ins_type, EX_ins_number, {1'b0,which_reg}, reg_content);
 		
-	ex_stage x_ex_stage(btn_out3, id_imm, id_inA, id_inB, id_wreg, id_m2reg, id_wmem, id_aluc, id_aluimm,id_shift, id_branch, id_pc4, 
+	ex_stage x_ex_stage(btn_out3, id_imm, id_inA, id_inB, id_wreg, id_m2reg, id_wmem, id_aluc, id_aluimm,id_shift,  
 		id_regrt,id_rt,id_rd, 
-		id_FWA, id_FWB,mem_aluR, wb_dest,//add for forwarding
-		ex_wreg, ex_m2reg, ex_wmem, ex_aluR, ex_inB, ex_destR, ex_branch, ex_pc, ex_zero, 
+		ex_wreg, ex_m2reg, ex_wmem, ex_aluR, ex_inB, ex_destR, 
 		EX_ins_type, EX_ins_number, MEM_ins_type, MEM_ins_number);
 	  
-	mem_stage x_mem_stage(btn_out3, ex_destR, ex_inB, ex_aluR, ex_wreg, ex_m2reg, ex_wmem, ex_branch,ex_pc,ex_zero,  
-	  mem_wreg, mem_m2reg, mem_mdata, mem_aluR, mem_destR, mem_branch, mem_pc,
+	mem_stage x_mem_stage(btn_out3, ex_destR, ex_inB, ex_aluR, ex_wreg, ex_m2reg, ex_wmem,   
+	  mem_wreg, mem_m2reg, mem_mdata, mem_aluR, mem_destR,  
 	  MEM_ins_type, MEM_ins_number, WB_ins_type, WB_ins_number);
 
 	wb_stage x_wb_stage(btn_out3, mem_destR, mem_aluR, mem_mdata, mem_wreg, mem_m2reg, 
