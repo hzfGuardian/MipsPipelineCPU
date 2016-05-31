@@ -133,11 +133,11 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 			strdata[119:112] <= ByteToChar(ex_aluR[7:4]);
 			strdata[111:104] <= ByteToChar(ex_aluR[3:0]);
 			//strdata[103:96] = "d";
-			strdata[95:88] <= ByteToChar(mem_aluR[7:4]);
-			strdata[87:80] <= ByteToChar(mem_aluR[3:0]);
+			strdata[95:88] <= ByteToChar(pc[7:4]);
+			strdata[87:80] <= ByteToChar(pc[3:0]);
 			//strdata[79:72] = "e";
-			strdata[71:64] <= ByteToChar(wb_dest[7:4]);
-			strdata[63:56] <= ByteToChar(wb_dest[3:0]);
+			strdata[71:64] <= ByteToChar({3'b0, id_branch});
+			strdata[63:56] <= ByteToChar(id_jpc[3:0]);
 			//strdata[55:48] = "m";
 			strdata[47:40] <= ByteToChar(id_inA[7:4]);
 			strdata[39:32] <= ByteToChar(id_inA[3:0]);

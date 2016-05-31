@@ -73,9 +73,11 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	
 	
 	//add for branch
-	wire jmp_in_0, jmp_in_1;
+	wire [31:0] jmp_in_0, jmp_in_1;
 	
 	wire id_rsrtequ;
+	
+	wire control_stall;
 	
 	assign jmp_in_0 = pc4 + {(imm[15] ? {14'b1, imm} : {14'b0, imm}), 2'b00};
 	assign jmp_in_1 = {pc4[31:28], reg_inst[25:0], 2'b00};
@@ -99,7 +101,7 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 			
 		end
 		
-		else if (cu_wpcir == 1)
+		else if (cu_wpcir == 1 || control_stall == 1)
 		begin
 			reg_inst <= 0;
 			pc4 <= pc4;
@@ -121,7 +123,7 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 		which_reg, reg_content);
 		
 	ctrl_unit x_ctrl_unit(clk, rst, if_inst[31:0], reg_inst[31:0], id_rsrtequ, 
-		cu_branch, cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_sext,cu_regrt, cu_wpcir, cu_fwda, cu_fwdb, cu_jump);
+		cu_branch, cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_sext,cu_regrt, cu_wpcir, cu_fwda, cu_fwdb, cu_jump, control_stall);
 	
 	//assign id_inA = rdata_A;
 	//assign id_inB = rdata_B; //

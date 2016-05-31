@@ -3,7 +3,7 @@
 
 module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	cu_branch, cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_sext,cu_regrt, cu_wpcir, cu_fwda, cu_fwdb,
-	cu_jump);
+	cu_jump, control_stall);
 	
 	input clk;
 	input rst;
@@ -60,7 +60,8 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	//these for stall
 	wire AfromEx, BfromEx, AfromMem, BfromMem, AfromExLW, BfromExLW, AfromMemLW, BfromMemLW;
 	
-	wire control_stall, load_stall;
+	output wire control_stall;
+	wire	load_stall;
 	
 	assign opcode[5:0] =instr[31:26];////////////fetch new instr
 	assign rs[4:0] = instr[25:21];
@@ -85,7 +86,7 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	assign mem_op[5:0] = mem_instr[31:26];
 	assign wb_op[5:0] = wb_instr[31:26];
 	
-	assign cu_branch = ((opcode == `OP_BEQ) & id_rsrtequ) | ((opcode == `OP_BNE) & (~id_rsrtequ)); //modified for branch control logic
+	assign cu_branch = ((opcode == `OP_BEQ) & id_rsrtequ) | ((opcode == `OP_BNE) & (~id_rsrtequ)) | cu_jump; //modified for branch control logic
 	assign cu_regrt = ~(opcode == `OP_ALUOp); //if instr type = R type then 0 else 1;
 	assign cu_sext = (opcode == `OP_BEQ)|(opcode == `OP_BNE)|(opcode == `OP_LW)|(opcode == `OP_SW)|(opcode==`OP_ADDI);//when need to sign extend?
 	
@@ -106,13 +107,13 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	assign BfromExLW = (if_rt == rt) & (if_rt != 0) & (opcode == `OP_LW);
 	
 	
-	assign control_stall = (ex_op == `OP_BEQ) | (ex_op == `OP_BNE) | (mem_op == `OP_BEQ) | (mem_op == `OP_BNE)
-			| (ex_op == `OP_JMP) | (mem_op == `OP_JMP);
+	assign control_stall = (opcode == `OP_BEQ) | (opcode == `OP_BNE)// | (ex_op == `OP_BEQ) | (ex_op == `OP_BNE)
+			| (opcode == `OP_JMP);// | (ex_op == `OP_JMP);
 	assign load_stall = ((rt == if_rs) & (if_rs != 0) & (opcode == `OP_LW))
 								| ((rt == if_rt) & (if_rt != 0) & (opcode == `OP_LW));
 	
 	
-	assign cu_wpcir = control_stall | load_stall;//modified
+	assign cu_wpcir = load_stall;//modified
 
 	
 	assign cu_fwda[1:0] = (mem_op == `OP_LW && mem_rt == rs && rs != 0) ? 2'b11 : (
