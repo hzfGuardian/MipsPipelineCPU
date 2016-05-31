@@ -104,26 +104,28 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 						| ((ex_rt == wb_rt) & (ex_rt != 0) & (wb_op == `OP_LW));
 	assign AfromExLW = (if_rs == rt) & (if_rs != 0) & (opcode == `OP_LW);
 	assign BfromExLW = (if_rt == rt) & (if_rt != 0) & (opcode == `OP_LW);
-	//assign AfromMemLW = (if_rs == ex_rt) & (if_rs != 0) & (ex_op == `OP_LW);
-	//assign BfromMemLW = (if_rt == ex_rt) & (if_rt != 0) & (ex_op == `OP_LW);
+	
 	
 	assign control_stall = (ex_op == `OP_BEQ) | (ex_op == `OP_BNE) | (mem_op == `OP_BEQ) | (mem_op == `OP_BNE)
 			| (ex_op == `OP_JMP) | (mem_op == `OP_JMP);
-	assign load_stall = ((ex_rt == rs) & (rs != 0) & (ex_op == `OP_LW))
-								| ((ex_rt == rt) & (rt != 0) & (ex_op == `OP_LW));
+	assign load_stall = ((rt == if_rs) & (if_rs != 0) & (opcode == `OP_LW))
+								| ((rt == if_rt) & (if_rt != 0) & (opcode == `OP_LW));
 	
-	//Control stall: ex_op / mem_op is branch or jmp.      (Flush)
-	//Load stall:   (ex_op=lw) & ((ex_rd=id_rs) & exist_id_rs) 
-   //                 or ((ex_rd= id_rt) & exist_id_rt )
-
 	
 	assign cu_wpcir = control_stall | load_stall;//modified
+
 	
-	assign cu_fwda[1:0] = ((ex_op == `OP_ALUOp) && ((ex_rd == rs) & (rs != 0))) ? 2'b01 : 
-		( (((mem_op == `OP_ALUOp) & (mem_rd == rs) & (rs != 0)) | ((mem_op == `OP_LW) & (mem_rt == rs) & (rs != 0)) ) ? 2'b10 : 2'b00);
+	assign cu_fwda[1:0] = (mem_op == `OP_LW && mem_rt == rs && rs != 0) ? 2'b11 : (
+			(ex_op == `OP_ALUOp && ex_rd == rs && rs != 0) ? 2'b01 : (
+				(mem_op == `OP_ALUOp && mem_rd == rs && rs != 0) ? 2'b10 : 2'b00
+			)
+		);
 	
-	assign cu_fwdb[1:0] = ((ex_op == `OP_ALUOp) && ((ex_rd == rt) & (rt != 0))) ? 2'b01 : 
-		( (((mem_op == `OP_ALUOp) & (mem_rd == rt) & (rt != 0)) | ((mem_op == `OP_LW) & (mem_rt == rt) & (rt != 0)) ) ? 2'b10 : 2'b00);
+	assign cu_fwdb[1:0] = (mem_op == `OP_LW && mem_rt == rt && rt != 0) ? 2'b11 : (
+			(ex_op == `OP_ALUOp && ex_rd == rt && rt != 0) ? 2'b01 : (
+				(mem_op == `OP_ALUOp && mem_rd == rt && rt != 0) ? 2'b10 : 2'b00
+			)
+		);
 	
 	assign cu_jump = (opcode == `OP_JMP);
 	
