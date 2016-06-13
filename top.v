@@ -8,7 +8,7 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 	wire [31:0] if_pc4;
 	wire [31:0] if_inst;
 	
-	wire [31:0] id_pc4;	
+	//wire [31:0] id_pc4;	
 	wire [31:0] id_inA;
 	wire [31:0] id_inB;
 	wire [31:0] id_imm;
@@ -30,7 +30,7 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 	wire[31:0] ex_aluR;
 	wire[31:0] ex_inB;
 	wire[4:0] ex_destR;
-	//wire ex_branch,ex_zero;
+
 	wire[31:0]ex_pc;
 	
 	wire mem_wreg;
@@ -108,7 +108,8 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 			else
 				ByteToChar = 8'h41 + hex_byte[3:0] - 10;
 		end 
-	endfunction
+	endfunction
+
 	always @(posedge CCLK) begin
 		if ((btn_out3 == 1'b1) || (btn_out2 == 1'b1)) begin
 			//first line 8 4-bit Instrution
@@ -175,9 +176,8 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 	id_stage x_id_stage(btn_out3, btn_out2, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg, 
 		ex_aluR, mem_aluR, mem_mdata, //add for branch
 		id_wpcir, //add for stall
-		//id_FWA, id_FWB, //add for forwarding
 		id_jpc, //add for branch
-		id_wreg, id_m2reg, id_wmem, id_aluc, id_shift, id_aluimm, id_branch, id_pc4, id_inA, id_inB, id_imm, id_regrt,id_rt,id_rd, 
+		id_wreg, id_m2reg, id_wmem, id_aluc, id_shift, id_aluimm, id_branch, id_inA, id_inB, id_imm, id_regrt,id_rt,id_rd, 
 		ID_ins_type, ID_ins_number, EX_ins_type, EX_ins_number, {1'b0,which_reg}, reg_content);
 		
 	ex_stage x_ex_stage(btn_out3, id_imm, id_inA, id_inB, id_wreg, id_m2reg, id_wmem, id_aluc, id_aluimm,id_shift,  
