@@ -3,7 +3,7 @@
 
 module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	cu_branch, cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_sext,cu_regrt, cu_wpcir, cu_fwda, cu_fwdb,
-	cu_jump, control_stall);
+	cu_jump);
 	
 	input clk;
 	input rst;
@@ -60,7 +60,7 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	//these for stall
 	wire AfromEx, BfromEx, AfromMem, BfromMem, AfromExLW, BfromExLW, AfromMemLW, BfromMemLW;
 	
-	output wire control_stall;
+	//output wire control_stall;
 	wire	load_stall;
 	
 	assign opcode[5:0] =instr[31:26];////////////fetch new instr
@@ -107,13 +107,13 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	assign BfromExLW = (if_rt == rt) & (if_rt != 0) & (opcode == `OP_LW);
 	
 	
-	assign control_stall = (opcode == `OP_BEQ) | (opcode == `OP_BNE)// | (ex_op == `OP_BEQ) | (ex_op == `OP_BNE)
-			| (opcode == `OP_JMP);// | (ex_op == `OP_JMP);
+	//assign control_stall = load_stall;//(opcode == `OP_BEQ) | (opcode == `OP_BNE)// | (ex_op == `OP_BEQ) | (ex_op == `OP_BNE)
+			//| (opcode == `OP_JMP);// | (ex_op == `OP_JMP);
 	assign load_stall = ((rt == if_rs) & (if_rs != 0) & (opcode == `OP_LW))
 								| ((rt == if_rt) & (if_rt != 0) & (opcode == `OP_LW));
 	
 	
-	assign cu_wpcir = load_stall;//modified
+	assign cu_wpcir = load_stall;// | cu_branch;//modified
 
 	
 	assign cu_fwda[1:0] = (mem_op == `OP_LW && mem_rt == rs && rs != 0) ? 2'b11 : (
