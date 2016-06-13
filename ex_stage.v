@@ -40,7 +40,7 @@ module ex_stage (clk,  id_imm, id_inA, id_inB, id_wreg, id_m2reg, id_wmem, id_al
 	wire [31:0] sa;
 	wire [31:0] edata_a,edata_b,a_in,b_in,odata_imm;
 	wire [31:0] ex_aluR;
-	
+	wire [4:0] e_destR;
 	
 	assign a_in = eshift ? sa : edata_a;//
 	

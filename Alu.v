@@ -35,9 +35,38 @@ module Alu(i_r,i_s,i_aluc,o_zf,o_alu);
 				else
 				  o_alu = 0;
 			end
+			`ALU_XOR: begin
+				o_zf = 0;
+				o_alu = (i_r ^ i_s);
+			end
 			`ALU_NOR: begin
 				o_zf = 0;
 				o_alu = ~(i_r | i_s);
+			end
+			`ALU_SLL: begin
+				//here means res = i_s << i_r
+				o_zf = 0;
+				o_alu = i_s << i_r;
+			end
+			`ALU_SRL: begin
+				o_zf = 0;
+				o_alu = i_s >> i_r;
+			end
+			`ALU_SRA: begin
+				o_zf = 0;
+				o_alu = $signed(i_s) >>> i_r;
+			end
+			`ALU_SLLV: begin
+				o_zf = 0;
+				o_alu = i_s << i_r;
+			end
+			`ALU_SRLV: begin
+				o_zf = 0;
+				o_alu = i_s >> i_r;
+			end
+			`ALU_SRAV: begin
+				o_zf = 0;
+				o_alu = $signed(i_s) >>> i_r;
 			end
 			default: begin
 				o_alu = 0;

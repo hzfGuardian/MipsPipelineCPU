@@ -8,7 +8,7 @@ module Reg_ID_EXE(clk, 	wreg,	m2reg, wmem, aluc, shift, aluimm,  data_a, data_b,
 	input [3:0] 	aluc;
 	input [31:0]	data_a,	data_b,	data_imm;
 	
-	input id_destR;
+	input[4:0] id_destR;
 	input[3:0] 	ID_ins_type;
 	input[3:0]	ID_ins_number;
 	
@@ -17,7 +17,7 @@ module Reg_ID_EXE(clk, 	wreg,	m2reg, wmem, aluc, shift, aluimm,  data_a, data_b,
 	output [3:0] 	ealuc;
 	output [31:0]	odata_a,odata_b,odata_imm;
 	
-	output e_destR;
+	output[4:0] e_destR;
 
 	output[3:0] EXE_ins_type;
 	output[3:0] EXE_ins_number;
@@ -28,9 +28,9 @@ module Reg_ID_EXE(clk, 	wreg,	m2reg, wmem, aluc, shift, aluimm,  data_a, data_b,
 	reg [3:0] 	ealuc;
 	reg [31:0]	odata_a,odata_b,odata_imm;
 
-	reg e_regrt;
-	reg [4:0]e_rt;
-	reg [4:0]e_rd;
+	reg [4:0] e_destR;
+	//reg [4:0]e_rt;
+	//reg [4:0]e_rd;
 	
 	always@(posedge clk) begin
 			ewreg <= wreg;

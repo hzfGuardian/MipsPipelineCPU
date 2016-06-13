@@ -3,7 +3,7 @@
 
 module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	cu_branch, cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_sext,cu_regrt, cu_wpcir, cu_fwda, cu_fwdb,
-	cu_jump, cu_jr, cu_jal);
+	cu_jump, cu_jr, cu_jal, cu_fwdja, cu_fwdjb);
 	
 	input clk;
 	input rst;
@@ -31,6 +31,9 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	//for JR
 	output cu_jr;
 	output cu_jal;
+	
+	//for JAL
+	output cu_fwdja, cu_fwdjb;
 	
 	wire [5:0] func;
 	wire [5:0] opcode;
@@ -88,7 +91,7 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	assign mem_op[5:0] = mem_instr[31:26];
 	assign wb_op[5:0] = wb_instr[31:26];
 	
-	assign cu_branch = ((opcode == `OP_BEQ) & id_rsrtequ) | ((opcode == `OP_BNE) & (~id_rsrtequ)) | cu_jump; //modified for branch control logic
+	assign cu_branch = ((opcode == `OP_BEQ) & id_rsrtequ) | ((opcode == `OP_BNE) & (~id_rsrtequ)) | cu_jump | cu_jr | cu_jal; //modified for branch control logic
 	assign cu_regrt = ~(opcode == `OP_ALUOp); //if instr type = R type then 0 else 1;
 	assign cu_sext = (opcode == `OP_BEQ)|(opcode == `OP_BNE)|(opcode == `OP_LW)|(opcode == `OP_SW)|(opcode==`OP_ADDI);//when need to sign extend?
 	
@@ -98,15 +101,6 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	assign cu_shift = ((opcode == `OP_ALUOp) && (func[5:2] == 4'b0))? 1 : 0;
 	assign cu_aluimm = cu_regrt & ~cu_branch;
 	
-	//add for stall
-	assign AfromEx = (ex_rs == mem_rd) & (ex_rs != 0) & (mem_op == `OP_ALUOp);
-	assign BfromEx = (ex_rt == mem_rd) & (ex_rt != 0) & (mem_op == `OP_ALUOp);
-	assign AfromMem = ((ex_rs == wb_rd) & (ex_rs != 0) & (wb_op == `OP_ALUOp))
-						| ((ex_rs == wb_rt) & (ex_rs != 0) & (wb_op == `OP_LW));
-	assign BfromMem = ((ex_rt == wb_rd) & (ex_rt != 0) & (wb_op == `OP_ALUOp))
-						| ((ex_rt == wb_rt) & (ex_rt != 0) & (wb_op == `OP_LW));
-	assign AfromExLW = (if_rs == rt) & (if_rs != 0) & (opcode == `OP_LW);
-	assign BfromExLW = (if_rt == rt) & (if_rt != 0) & (opcode == `OP_LW);
 	
 	assign load_stall = ((rt == if_rs) & (if_rs != 0) & (opcode == `OP_LW))
 								| ((rt == if_rt) & (if_rt != 0) & (opcode == `OP_LW));
@@ -129,10 +123,14 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	
 	assign cu_jump = (opcode == `OP_JMP);
 	
-	assign cu_jr = (opcode == `OP_ALUOp && func == `FUNC_JR);
+	assign cu_jr = (opcode == `OP_ALUOp) && (func == `FUNC_JR);
 
 	assign cu_jal = (opcode == `OP_JAL);
-
+	
+	//add for JAL hazard
+	assign cu_fwdja = (ex_op == `OP_JAL) && (if_rs == 5'b11111);
+	assign cu_fwdjb = (ex_op == `OP_JAL) && (if_rt == 5'b11111);
+	
 	always @ (posedge clk or posedge rst)
 		if(rst == 1)
 		begin

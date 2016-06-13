@@ -34,9 +34,9 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	output [31:0] id_inA;
 	output [31:0] id_inB;
 	output [31:0] id_imm;
-	output cu_regrt;
-	output [4:0] rd;
-	output [4:0] rt;
+	//output cu_regrt;
+	//output [4:0] rd;
+	//output [4:0] rt;
 	
 	output[3:0] ID_ins_type;
 	output[3:0] ID_ins_number;
@@ -80,14 +80,19 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	wire id_rsrtequ;
 	
 	wire control_stall;
-
+	
+	wire cu_jal;
+	
 	//add for 31 mips
 	wire [31:0] id_inA_0, id_inA_1, id_inB_0, id_inB_1;
 	wire [31:0] jpc_0;
 	
+	//add for JAL hazard
+	wire cu_fwdja, cu_fwdjb;
+	
 	assign jmp_in_0 = pc4 + {(imm[15] ? {14'b1, imm} : {14'b0, imm}), 2'b00};
 	assign jmp_in_1 = {pc4[31:28], reg_inst[25:0], 2'b00};
-	assign jpc_0 = cu_jump ? jmp_in_1 : jmp_in_0;
+	assign jpc_0 = (cu_jump | cu_jal) ? jmp_in_1 : jmp_in_0;
 	
 	assign id_rsrtequ = (id_inA_0 == id_inB_0) ? 1 : 0;
 	
@@ -132,12 +137,12 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 		
 	ctrl_unit x_ctrl_unit(clk, rst, if_inst[31:0], reg_inst[31:0], id_rsrtequ, 
 		cu_branch, cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_sext,cu_regrt, cu_wpcir, cu_fwda, cu_fwdb, 
-		cu_jump, cu_jr, cu_jal
+		cu_jump, cu_jr, cu_jal, cu_fwdja, cu_fwdjb
 	);
 	
 	//add for jal
-	assign id_inA = cu_jal ? pc4 : id_inA_0;
-	assign id_inB = cu_jal ? 0 : id_inB_0;
+	assign id_inA = (cu_fwdja) ? ex_aluR : (cu_jal ? pc4 : id_inA_0);
+	assign id_inB = (cu_fwdjb) ? ex_aluR : (cu_jal ? 0 : id_inB_0);
 	
 	assign id_destR = cu_jal ? 5'b11111 : (cu_regrt ? rd : rt);
 
