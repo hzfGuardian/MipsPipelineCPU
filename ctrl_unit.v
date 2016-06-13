@@ -3,7 +3,7 @@
 
 module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	cu_branch, cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_sext,cu_regrt, cu_wpcir, cu_fwda, cu_fwdb,
-	cu_jump);
+	cu_jump, cu_jr, cu_jal);
 	
 	input clk;
 	input rst;
@@ -28,6 +28,9 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	
 	//add for control logic
 	output cu_jump;
+	//for JR
+	output cu_jr;
+	output cu_jal;
 	
 	wire [5:0] func;
 	wire [5:0] opcode;
@@ -60,9 +63,8 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	//these for stall
 	wire AfromEx, BfromEx, AfromMem, BfromMem, AfromExLW, BfromExLW, AfromMemLW, BfromMemLW;
 	
-	//output wire control_stall;
 	wire	load_stall;
-	
+
 	assign opcode[5:0] =instr[31:26];////////////fetch new instr
 	assign rs[4:0] = instr[25:21];
 	assign rt[4:0] = instr[20:16];
@@ -106,14 +108,11 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	assign AfromExLW = (if_rs == rt) & (if_rs != 0) & (opcode == `OP_LW);
 	assign BfromExLW = (if_rt == rt) & (if_rt != 0) & (opcode == `OP_LW);
 	
-	
-	//assign control_stall = load_stall;//(opcode == `OP_BEQ) | (opcode == `OP_BNE)// | (ex_op == `OP_BEQ) | (ex_op == `OP_BNE)
-			//| (opcode == `OP_JMP);// | (ex_op == `OP_JMP);
 	assign load_stall = ((rt == if_rs) & (if_rs != 0) & (opcode == `OP_LW))
 								| ((rt == if_rt) & (if_rt != 0) & (opcode == `OP_LW));
 	
 	
-	assign cu_wpcir = load_stall;// | cu_branch;//modified
+	assign cu_wpcir = load_stall; //stall
 
 	
 	assign cu_fwda[1:0] = (mem_op == `OP_LW && mem_rt == rs && rs != 0) ? 2'b11 : (
@@ -130,6 +129,10 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	
 	assign cu_jump = (opcode == `OP_JMP);
 	
+	assign cu_jr = (opcode == `OP_ALUOp && func == `FUNC_JR);
+
+	assign cu_jal = (opcode == `OP_JAL);
+
 	always @ (posedge clk or posedge rst)
 		if(rst == 1)
 		begin
@@ -147,6 +150,9 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	always @(opcode) begin
 			case(opcode)
 				`OP_BEQ: begin
+					cu_aluc <= `ALU_SUB;////////////////////
+				end
+				`OP_BNE: begin
 					cu_aluc <= `ALU_SUB;////////////////////
 				end
 				`OP_ADDI: begin

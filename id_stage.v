@@ -5,7 +5,7 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	ex_aluR, mem_aluR, mem_mdata,//add for branch
 	cu_wpcir,//add for stall
 	ID_new_pc, //add for control
-	cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_branch, id_inA, id_inB, id_imm, cu_regrt, rt, rd, 
+	cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_branch, id_inA, id_inB, id_imm, id_destR, 
 	IF_ins_type, IF_ins_number, ID_ins_type, ID_ins_number, which_reg, reg_content);
 	
 	input clk;
@@ -30,7 +30,7 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	output [3:0] cu_aluc;
 	output cu_shift;
 	output cu_aluimm;
-	//output [31:0] id_pc4;
+
 	output [31:0] id_inA;
 	output [31:0] id_inB;
 	output [31:0] id_imm;
@@ -47,6 +47,8 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	wire [1:0] cu_fwda, cu_fwdb;//add for forwarding---------------------------------
 	
 	wire cu_jump;//add for branch
+
+	wire cu_jr;//add for 31 mips
 	
 	wire stall;
 	
@@ -67,11 +69,10 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	wire [15:0] imm;
 	wire [31:0] id_imm;
 	
-	//wire [31:0] id_pc4;
-	
 	reg[3:0] ID_ins_type;
 	reg[3:0] ID_ins_number;
 	
+	output [4:0] id_destR;
 	
 	//add for branch
 	wire [31:0] jmp_in_0, jmp_in_1;
@@ -79,19 +80,24 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	wire id_rsrtequ;
 	
 	wire control_stall;
+
+	//add for 31 mips
+	wire [31:0] id_inA_0, id_inA_1, id_inB_0, id_inB_1;
+	wire [31:0] jpc_0;
 	
 	assign jmp_in_0 = pc4 + {(imm[15] ? {14'b1, imm} : {14'b0, imm}), 2'b00};
 	assign jmp_in_1 = {pc4[31:28], reg_inst[25:0], 2'b00};
-	assign ID_new_pc = cu_jump ? jmp_in_1 : jmp_in_0;
+	assign jpc_0 = cu_jump ? jmp_in_1 : jmp_in_0;
 	
-	assign id_rsrtequ = (id_inA == id_inB) ? 1 : 0;
+	assign id_rsrtequ = (id_inA_0 == id_inB_0) ? 1 : 0;
 	
 	assign imm = reg_inst[15:0];
 	assign rt= reg_inst[20:16];
 	assign rd = reg_inst[15:11];
 	assign id_imm = cu_sext?( imm[15]?{16'b1,imm}:{16'b0,imm}):{16'b0,imm};
-	//assign id_pc4 = pc4; //
 	
+	//add for 31 mips
+	assign ID_new_pc = cu_jr ? id_inA_0 : jpc_0;
 	
 	always @ (posedge clk or posedge rst)
 		if (rst==1)
@@ -126,14 +132,18 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 		
 	ctrl_unit x_ctrl_unit(clk, rst, if_inst[31:0], reg_inst[31:0], id_rsrtequ, 
 		cu_branch, cu_wreg, cu_m2reg, cu_wmem, cu_aluc, cu_shift, cu_aluimm, cu_sext,cu_regrt, cu_wpcir, cu_fwda, cu_fwdb, 
-		cu_jump
+		cu_jump, cu_jr, cu_jal
 	);
 	
-	//assign id_inA = rdata_A;
-	//assign id_inB = rdata_B; //
+	//add for jal
+	assign id_inA = cu_jal ? pc4 : id_inA_0;
+	assign id_inB = cu_jal ? 0 : id_inB_0;
 	
-	mux4_1 mua(rdata_A, ex_aluR, mem_aluR, mem_mdata, cu_fwda, id_inA);
-	mux4_1 mub(rdata_B, ex_aluR, mem_aluR, mem_mdata, cu_fwdb, id_inB);
+	assign id_destR = cu_jal ? 5'b11111 : (cu_regrt ? rd : rt);
+
+	mux4_1 mua(rdata_A, ex_aluR, mem_aluR, mem_mdata, cu_fwda, id_inA_0);
+	mux4_1 mub(rdata_B, ex_aluR, mem_aluR, mem_mdata, cu_fwdb, id_inB_0);
+	
 	
 endmodule
 

@@ -1,16 +1,14 @@
 `timescale 1ns / 1ps
 
-module Reg_ID_EXE(clk, 	wreg,	m2reg, wmem, aluc, shift, aluimm,  data_a, data_b, data_imm, id_regrt,id_rt,id_rd,//inputs
-								ewreg,em2reg,	ewmem,ealuc, eshift, ealuimm, odata_a,odata_b, odata_imm, e_regrt,e_rt,e_rd,
+module Reg_ID_EXE(clk, 	wreg,	m2reg, wmem, aluc, shift, aluimm,  data_a, data_b, data_imm, id_destR,//inputs
+								ewreg,em2reg,	ewmem,ealuc, eshift, ealuimm, odata_a,odata_b, odata_imm, e_destR,
 								ID_ins_type, ID_ins_number, EXE_ins_type, EXE_ins_number);	//outputs
 	input		clk;
 	input 	wreg,	m2reg,	wmem,	shift,	aluimm;
 	input [3:0] 	aluc;
 	input [31:0]	data_a,	data_b,	data_imm;
 	
-	input id_regrt;
-	input [4:0]id_rt;
-	input [4:0]id_rd;
+	input id_destR;
 	input[3:0] 	ID_ins_type;
 	input[3:0]	ID_ins_number;
 	
@@ -19,9 +17,8 @@ module Reg_ID_EXE(clk, 	wreg,	m2reg, wmem, aluc, shift, aluimm,  data_a, data_b,
 	output [3:0] 	ealuc;
 	output [31:0]	odata_a,odata_b,odata_imm;
 	
-	output e_regrt;
-	output [4:0] e_rt;
-	output [4:0] e_rd;
+	output e_destR;
+
 	output[3:0] EXE_ins_type;
 	output[3:0] EXE_ins_number;
 	
@@ -47,9 +44,7 @@ module Reg_ID_EXE(clk, 	wreg,	m2reg, wmem, aluc, shift, aluimm,  data_a, data_b,
 			odata_imm <= data_imm;
 			EXE_ins_type <= ID_ins_type;
 			EXE_ins_number <= ID_ins_number;
-			e_regrt <= id_regrt;
-			e_rt <= id_rt;
-			e_rd <= id_rd;
+			e_destR <= id_destR;
 	end
 endmodule
 

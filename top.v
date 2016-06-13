@@ -177,11 +177,11 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 		ex_aluR, mem_aluR, mem_mdata, //add for branch
 		id_wpcir, //add for stall
 		id_jpc, //add for branch
-		id_wreg, id_m2reg, id_wmem, id_aluc, id_shift, id_aluimm, id_branch, id_inA, id_inB, id_imm, id_regrt,id_rt,id_rd, 
+		id_wreg, id_m2reg, id_wmem, id_aluc, id_shift, id_aluimm, id_branch, id_inA, id_inB, id_imm, id_destR, 
 		ID_ins_type, ID_ins_number, EX_ins_type, EX_ins_number, {1'b0,which_reg}, reg_content);
 		
 	ex_stage x_ex_stage(btn_out3, id_imm, id_inA, id_inB, id_wreg, id_m2reg, id_wmem, id_aluc, id_aluimm,id_shift,  
-		id_regrt,id_rt,id_rd, 
+		id_destR,
 		ex_wreg, ex_m2reg, ex_wmem, ex_aluR, ex_inB, ex_destR, 
 		EX_ins_type, EX_ins_number, MEM_ins_type, MEM_ins_number);
 	  
