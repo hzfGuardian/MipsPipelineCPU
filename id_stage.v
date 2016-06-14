@@ -141,8 +141,8 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	);
 	
 	//add for jal
-	assign id_inA = (cu_fwdja) ? ex_aluR : (cu_jal ? pc4 : id_inA_0);
-	assign id_inB = (cu_fwdjb) ? ex_aluR : (cu_jal ? 0 : id_inB_0);
+	assign id_inA = (cu_fwdja) ? mem_aluR : (cu_jal ? pc4 : id_inA_0);
+	assign id_inB = (cu_fwdjb) ? mem_aluR : (cu_jal ? 0 : id_inB_0);
 	
 	assign id_destR = cu_jal ? 5'b11111 : (cu_regrt ? rt : rd);
 

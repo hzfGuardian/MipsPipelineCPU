@@ -67,6 +67,8 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	wire AfromEx, BfromEx, AfromMem, BfromMem, AfromExLW, BfromExLW, AfromMemLW, BfromMemLW;
 	
 	wire	load_stall;
+	
+	wire i_wreg_en;
 
 	assign opcode[5:0] =instr[31:26];////////////fetch new instr
 	assign rs[4:0] = instr[25:21];
@@ -95,7 +97,9 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	assign cu_regrt = ~(opcode == `OP_ALUOp); //if instr type = R type then 0 else 1;
 	assign cu_sext = (opcode == `OP_BEQ)|(opcode == `OP_BNE)|(opcode == `OP_LW)|(opcode == `OP_SW)|(opcode==`OP_ADDI);//when need to sign extend?
 	
-	assign cu_wreg = (opcode==`OP_ALUOp)|(opcode==`OP_LW)|(opcode==`OP_ORI)|(opcode==`OP_ADDI)|(opcode==`OP_ANDI);//when need to write reg?
+	assign cu_wreg = (opcode==`OP_ALUOp)|
+	(opcode==`OP_LW) | i_wreg_en |
+	(opcode==`OP_JAL);//when need to write reg?
 	assign cu_m2reg = (opcode == `OP_LW);//when need to write mem to reg??
 	assign cu_wmem = (opcode == `OP_SW);//when need to enable write mem?
 	assign cu_shift = ((opcode == `OP_ALUOp) && (func[5:2] == 4'b0))? 1 : 0;
@@ -130,6 +134,8 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	//add for JAL hazard
 	assign cu_fwdja = (ex_op == `OP_JAL) && (if_rs == 5'b11111);
 	assign cu_fwdjb = (ex_op == `OP_JAL) && (if_rt == 5'b11111);
+	
+	assign i_wreg_en = (opcode==`OP_ADDI) | (opcode==`OP_ANDI) | (opcode==`OP_LUI) | (opcode==`OP_ORI) | (opcode==`OP_XORI) ;
 	
 	always @ (posedge clk or posedge rst)
 		if(rst == 1)
