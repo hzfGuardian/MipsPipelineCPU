@@ -30,7 +30,7 @@ module Alu(i_r,i_s,i_aluc,o_zf,o_alu);
 			end
 			`ALU_SLT: begin
 				o_zf = 0;
-			  if (i_s < i_r)
+			  if (i_r < i_s)
 				  o_alu = 1;
 				else
 				  o_alu = 0;
