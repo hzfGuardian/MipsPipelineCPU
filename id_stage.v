@@ -83,6 +83,8 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	
 	wire cu_jal;
 	
+	wire [31:0] id_outa, id_outb;
+	
 	//add for 31 mips
 	wire [31:0] id_inA_0, id_inA_1, id_inB_0, id_inB_1;
 	wire [31:0] jpc_0;
@@ -141,14 +143,16 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	);
 	
 	//add for jal
-	assign id_inA = (cu_fwdja) ? mem_aluR : (cu_jal ? pc4 : id_inA_0);
-	assign id_inB = (cu_fwdjb) ? mem_aluR : (cu_jal ? 0 : id_inB_0);
+	assign id_inA = cu_jal ? pc4 : id_inA_0;
+	assign id_inB = cu_jal ? 0 : id_inB_0;
 	
 	assign id_destR = cu_jal ? 5'b11111 : (cu_regrt ? rt : rd);
 
-	mux4_1 mua(rdata_A, ex_aluR, mem_aluR, mem_mdata, cu_fwda, id_inA_0);
-	mux4_1 mub(rdata_B, ex_aluR, mem_aluR, mem_mdata, cu_fwdb, id_inB_0);
+	mux4_1 mua(rdata_A, ex_aluR, mem_aluR, mem_mdata, cu_fwda, id_outa);
+	mux4_1 mub(rdata_B, ex_aluR, mem_aluR, mem_mdata, cu_fwdb, id_outb);
 	
+	assign id_inA_0 = cu_fwdja ? mem_aluR : id_outa;
+	assign id_inB_0 = cu_fwdjb ? mem_aluR : id_outb;
 	
 endmodule
 

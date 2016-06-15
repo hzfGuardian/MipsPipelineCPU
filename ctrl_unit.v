@@ -132,8 +132,8 @@ module ctrl_unit(clk, rst, if_instr, instr, id_rsrtequ,
 	assign cu_jal = (opcode == `OP_JAL);
 	
 	//add for JAL hazard
-	assign cu_fwdja = (ex_op == `OP_JAL) && (if_rs == 5'b11111);
-	assign cu_fwdjb = (ex_op == `OP_JAL) && (if_rt == 5'b11111);
+	assign cu_fwdja = (mem_op == `OP_JAL) && (rs == 5'b11111);
+	assign cu_fwdjb = (mem_op == `OP_JAL) && (rt == 5'b11111);
 	
 	assign i_wreg_en = (opcode==`OP_ADDI) | (opcode==`OP_ANDI) | (opcode==`OP_LUI) | (opcode==`OP_ORI) | (opcode==`OP_XORI) ;
 	
