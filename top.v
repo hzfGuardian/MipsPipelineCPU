@@ -2,15 +2,15 @@
 
 
 module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW, 
-	output wire LED, LCDE, LCDRS, LCDRW, output wire [3:0]LCDDAT, output reg [255:0] strdata);
+	output wire LED, LCDE, LCDRS, LCDRW, output wire [3:0]LCDDAT);
 
 	wire [31:0] if_npc;
 	wire [31:0] if_pc4;
 	wire [31:0] if_inst;
 	
 	//wire [31:0] id_pc4;	
-	wire [31:0] id_inA;
-	wire [31:0] id_inB;
+	wire [31:0] id_inA;							//////////////
+	wire [31:0] id_inB;							//////////////
 	wire [31:0] id_imm;
 	wire [4:0] id_destR;
 	wire id_regrt;//modified
@@ -62,7 +62,7 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 	wire [31:0] reg_content;
 	wire [3:0] which_reg;
 	
-	//output reg [255:0] strdata;
+	reg [255:0] strdata;
 	reg [3:0] SW_old;
 	reg [7:0] clk_cnt;
 	reg cls;
@@ -78,6 +78,8 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 	wire [1:0] id_FWA, id_FWB;//add for forwarding
 	
 	wire [31:0] id_jpc;
+	
+	wire equal;
 	
 	assign LCDDAT[3]=lcdd[3];
 	assign LCDDAT[2]=lcdd[2];
@@ -134,17 +136,17 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 			strdata[119:112] <= ByteToChar(ex_aluR[7:4]);
 			strdata[111:104] <= ByteToChar(ex_aluR[3:0]);
 			//strdata[103:96] = "d";
-			strdata[95:88] <= ByteToChar(mem_aluR[7:4]);
-			strdata[87:80] <= ByteToChar(mem_aluR[3:0]);
+			strdata[95:88] <= ByteToChar({id_branch, id_branch, id_branch, id_branch});
+			strdata[87:80] <= ByteToChar({3'b0, equal});
 			//strdata[79:72] = "e";
-			strdata[71:64] <= ByteToChar(mem_mdata[7:4]);
-			strdata[63:56] <= ByteToChar(mem_mdata[3:0]);
+			strdata[71:64] <= ByteToChar(pc[7:4]);
+			strdata[63:56] <= ByteToChar(pc[3:0]);
 			//strdata[55:48] = "m";
-			strdata[47:40] <= ByteToChar(id_inA[7:4]);
-			strdata[39:32] <= ByteToChar(id_inA[3:0]);
+			strdata[47:40] <= ByteToChar(reg_content[31:28]);
+			strdata[39:32] <= ByteToChar(reg_content[27:24]);
 			//strdata[31:24] = "w";
-			strdata[23:16] <= ByteToChar(id_inB[7:4]);//
-			strdata[15:8] <= ByteToChar(id_inB[3:0]);
+			strdata[23:16] <= ByteToChar(reg_content[23:20]);//
+			strdata[15:8] <= ByteToChar(reg_content[19:16]);
 		end
 		if((btn_out3 == 1'b1) || (btn_out2 == 1'b1)||(SW_old != SW)) begin
 			//first line after CLK and space
@@ -178,7 +180,7 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 		id_wpcir, //add for stall
 		id_jpc, //add for branch
 		id_wreg, id_m2reg, id_wmem, id_aluc, id_shift, id_aluimm, id_branch, id_inA, id_inB, id_imm, id_destR, 
-		ID_ins_type, ID_ins_number, EX_ins_type, EX_ins_number, {1'b1,which_reg}, reg_content);
+		ID_ins_type, ID_ins_number, EX_ins_type, EX_ins_number, {1'b0,which_reg}, reg_content);
 		
 	ex_stage x_ex_stage(btn_out3, id_imm, id_inA, id_inB, id_wreg, id_m2reg, id_wmem, id_aluc, id_aluimm,id_shift,  
 		id_destR,
@@ -192,9 +194,11 @@ module top(input wire CCLK, BTN3, BTN2, input wire [3:0]SW,
 	wb_stage x_wb_stage(btn_out3, mem_destR, mem_aluR, mem_mdata, mem_wreg, mem_m2reg, 
 	  wb_wreg, wb_dest, wb_destR, WB_ins_type, WB_ins_number,OUT_ins_type, OUT_ins_number);
 	
-	//pbdebounce pb0(CCLK, BTN2, btn_out2);
-	//pbdebounce pb1(CCLK, BTN3, btn_out3);
-	assign btn_out2 = BTN2;
-	assign btn_out3 = BTN3;
-	
+	pbdebounce pb0(CCLK, BTN2, btn_out2);
+	pbdebounce pb1(CCLK, BTN3, btn_out3);
+	//assign btn_out2 = BTN2;
+	//assign btn_out3 = BTN3;
+	//assign aa = id_inA;
+	//assign bb = id_inB;
+	//assign alr = ex_aluR;
 endmodule

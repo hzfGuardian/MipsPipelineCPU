@@ -30,10 +30,11 @@ module Alu(i_r,i_s,i_aluc,o_zf,o_alu);
 			end
 			`ALU_SLT: begin
 				o_zf = 0;
-			  if (i_r < i_s)
-				  o_alu = 1;
-				else
-				  o_alu = 0;
+				o_alu = ($signed(i_r) < $signed(i_s)) ? 1 : 0;
+			end
+			`ALU_SLTU: begin
+				o_zf = 0;
+			   o_alu = ($unsigned(i_r) < $unsigned(i_s)) ? 1 : 0;
 			end
 			`ALU_XOR: begin
 				o_zf = 0;
@@ -56,17 +57,10 @@ module Alu(i_r,i_s,i_aluc,o_zf,o_alu);
 				o_zf = 0;
 				o_alu = $signed(i_s) >>> i_r;
 			end
-			`ALU_SLLV: begin
+			
+			`ALU_LUI: begin
 				o_zf = 0;
-				o_alu = i_s << i_r;
-			end
-			`ALU_SRLV: begin
-				o_zf = 0;
-				o_alu = i_s >> i_r;
-			end
-			`ALU_SRAV: begin
-				o_zf = 0;
-				o_alu = $signed(i_s) >>> i_r;
+				o_alu = {i_s[15:0] , 16'b0};
 			end
 			default: begin
 				o_alu = 0;

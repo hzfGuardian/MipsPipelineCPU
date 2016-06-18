@@ -44,6 +44,8 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	
 	output cu_wpcir;//add for stall, it means load stall !
 	
+	//output equal;
+	
 	wire [1:0] cu_fwda, cu_fwdb;//add for forwarding---------------------------------
 	
 	wire cu_jump;//add for branch
@@ -96,12 +98,12 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	assign jmp_in_1 = {pc4[31:28], reg_inst[25:0], 2'b00};
 	assign jpc_0 = (cu_jump | cu_jal) ? jmp_in_1 : jmp_in_0;
 	
-	assign id_rsrtequ = (id_inA_0 == id_inB_0) ? 1 : 0;
-	
+	assign id_rsrtequ = (id_inA == id_inB);
+	assign equal = id_rsrtequ;
 	assign imm = reg_inst[15:0];
 	assign rt= reg_inst[20:16];
 	assign rd = reg_inst[15:11];
-	assign id_imm = cu_sext?( imm[15]?{16'b1,imm}:{16'b0,imm}):{16'b0,imm};
+	assign id_imm = cu_sext?( imm[15]?{16'hffff,imm}:{16'b0,imm}):{16'b0,imm};
 	
 	//add for 31 mips
 	assign ID_new_pc = cu_jr ? id_inA_0 : jpc_0;
@@ -116,7 +118,7 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 			
 		end
 		
-		else if (cu_wpcir == 1 || cu_branch == 1) // load stall or branch stall
+		else if (cu_wpcir == 1) // load stall or branch stall
 		begin
 			reg_inst <= 0;
 			pc4 <= pc4;
@@ -143,7 +145,7 @@ module id_stage (clk, rst, if_inst, if_pc4, wb_destR, wb_dest,wb_wreg,
 	);
 	
 	//add for jal
-	assign id_inA = cu_jal ? pc4 : id_inA_0;
+	assign id_inA = cu_jal ? pc4 + 4 : id_inA_0;
 	assign id_inB = cu_jal ? 0 : id_inB_0;
 	
 	assign id_destR = cu_jal ? 5'b11111 : (cu_regrt ? rt : rd);

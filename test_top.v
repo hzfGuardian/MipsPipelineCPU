@@ -37,6 +37,7 @@ module test_top;
 	wire LCDRW;
 	wire [3:0] LCDDAT;
 	wire [255:0] strdata;
+	//wire [31:0] aa, bb, alr;
 
 	// Instantiate the Unit Under Test (UUT)
 	top uut (
@@ -62,8 +63,9 @@ module test_top;
 		#20 BTN2 = 1;
 		#20 BTN2 = 0;
 		
+		SW = 9;
 		// Wait 100 ns for global reset to finish
-		#6000;
+		#6000 $finish;
         
 		// Add stimulus here
 

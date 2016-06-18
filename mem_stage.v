@@ -36,7 +36,7 @@ module mem_stage (clk, ex_destR, ex_inB, ex_aluR, ex_wreg, ex_m2reg, ex_wmem,
 							mem_wreg, mem_m2reg, mwmem, mem_aluR, data_in, mem_destR, 
 							EXE_ins_type, EXE_ins_number, MEM_ins_type, MEM_ins_number);
 							
-	data_mem x_data_mem(mem_aluR[8:0], data_in, ~clk, mwmem, mem_mdata);
+	data_mem x_data_mem(mem_aluR[10:2], data_in, ~clk, mwmem, mem_mdata);
 	
 endmodule
 
